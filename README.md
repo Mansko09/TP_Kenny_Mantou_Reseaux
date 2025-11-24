@@ -13,3 +13,7 @@ TP Bus et réseaux 1 à 5
 7. 
 <img width="813" height="469" alt="image" src="https://github.com/user-attachments/assets/d5ae9617-da18-42e6-a53d-90cf70c435d7" />
 
+2.
+<img width="169" height="43" alt="image" src="https://github.com/user-attachments/assets/64c3c8f6-5393-41d4-abe5-bd4a83d9d405" />
+
+
