@@ -2,6 +2,10 @@
 TP Bus et réseaux 1 à 5 
 
 ## TP1 - I2C
+### 2.1. Capteur BMP280
+Mise en œuvre du BMP280
+
+Le BMP280 est un capteur de pression et température développé par Bosch.
 1. Les adresses I2C possibles pour ce composant :
    <img width="811" height="314" alt="image" src="https://github.com/user-attachments/assets/332f19c4-f6b0-4601-9cfc-a145bb23c96c" />
 2. Le registre 0xD0 "id" permet d'identifier ce composant.
@@ -13,7 +17,20 @@ TP Bus et réseaux 1 à 5
 7. 
 <img width="813" height="469" alt="image" src="https://github.com/user-attachments/assets/d5ae9617-da18-42e6-a53d-90cf70c435d7" />
 
-2.
+### 2.2. Setup du STM32
+
+
+### 2.3. Communication I²C
+
+HAL_I2C_Master_Transmit permet d'écire sur le bus, alors que HAL_I2C_Master_Receive permet de lire le bus. Ces 2 fonctions gère le bit R/W, mais il faut quand même lui laisser la place dans l'adresse I²C.
+L'adresse I²C est officiellement sur 7 bits. L'API HAL du STM32 demande des adresses I²C sur 8bits, le LSB étant réservé au bit de R/W. Il faudra donc penser à décaler les adresses d'1 bit sur la gauche et laisser le LSB à 0.
+
+#### Communication avec le BMP280
+Identification du BMP280 : 
 <img width="169" height="43" alt="image" src="https://github.com/user-attachments/assets/64c3c8f6-5393-41d4-abe5-bd4a83d9d405" />
 
+Récupération de l'étalonnage, de la température et de la pression : 
+
+
+Calcul des températures et des pression compensées
 
