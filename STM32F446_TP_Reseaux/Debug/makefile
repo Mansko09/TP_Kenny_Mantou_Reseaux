@@ -9,6 +9,12 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include shell/subdir.mk
+-include bmp280/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -61,7 +67,7 @@ main-build: STM32F446_TP_Reseaux.elf secondary-outputs
 
 # Tool invocations
 STM32F446_TP_Reseaux.elf STM32F446_TP_Reseaux.map: $(OBJS) $(USER_OBJS) C:\Users\mbeng\Documents\ENSEA_3e_ESE\TP_Bus_et_reseaux\TP_Kenny_Mantou_Reseaux\STM32F446_TP_Reseaux\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM32F446_TP_Reseaux.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mbeng\Documents\ENSEA_3e_ESE\TP_Bus_et_reseaux\TP_Kenny_Mantou_Reseaux\STM32F446_TP_Reseaux\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F446_TP_Reseaux.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "STM32F446_TP_Reseaux.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mbeng\Documents\ENSEA_3e_ESE\TP_Bus_et_reseaux\TP_Kenny_Mantou_Reseaux\STM32F446_TP_Reseaux\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F446_TP_Reseaux.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
