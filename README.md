@@ -34,3 +34,12 @@ Récupération de l'étalonnage, de la température et de la pression :
 
 Calcul des températures et des pression compensées
 
+
+## 3. TP2 - Interfaçage STM32 - Raspberry
+### 3.1. Mise en route du Raspberry PI Zéro
+Nous avons téléchargé Raspberry Pi OS (32-bit) Lite, configuré le réseau du routeur utilisé en TP et utilisé ssh pour se connecter à notre raspberry.
+
+Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la box wi-fi). 
+
+### 3.2. Port Série
+
