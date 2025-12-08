@@ -43,3 +43,11 @@ Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la b
 
 ### 3.2. Port Série
 
+
+
+## 4. TP3 - Interface REST
+### 4.1. Installation du serveur Python
+
+
+<img width="397" height="90" alt="image" src="https://github.com/user-attachments/assets/5eec60d8-0266-4ce8-a905-c8f865b43507" />
+
