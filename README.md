@@ -41,16 +41,16 @@ Nous avons téléchargé Raspberry Pi OS (32-bit) Lite, configuré le réseau du
 
 Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la box wi-fi). 
 
-### 3.2. Port Série
 
 
 
 ## 4. TP3 - Interface REST
 ### 4.1. Installation du serveur Python
 
-
 <img width="397" height="90" alt="image" src="https://github.com/user-attachments/assets/5eec60d8-0266-4ce8-a905-c8f865b43507" />
 
 <img width="458" height="161" alt="image" src="https://github.com/user-attachments/assets/69189998-269f-495f-85af-cae3160a6e55" />
 
+Le décorateur @app.route sert à associer une route à une fonction Python.
+Le fragment est un paramètre de route qui indique que l'URL doit contenir une valeur à cet endroit,que cette valeur est convertie en int et qu'elle sera transmise en argument à welcome.
 
