@@ -51,3 +51,6 @@ Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la b
 
 <img width="397" height="90" alt="image" src="https://github.com/user-attachments/assets/5eec60d8-0266-4ce8-a905-c8f865b43507" />
 
+<img width="458" height="161" alt="image" src="https://github.com/user-attachments/assets/69189998-269f-495f-85af-cae3160a6e55" />
+
+
