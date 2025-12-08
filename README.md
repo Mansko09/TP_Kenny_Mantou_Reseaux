@@ -57,5 +57,6 @@ Le fragment est un paramètre de route qui indique que l'URL doit contenir une v
 Quelques tests : 
 <img width="475" height="41" alt="image" src="https://github.com/user-attachments/assets/86498f6c-38ee-4154-b846-c7acc9f3400f" /> 
 
+<img width="550" height="175" alt="image" src="https://github.com/user-attachments/assets/c76cd4d3-0d95-4180-8848-8705f3232ced" />
 
 
