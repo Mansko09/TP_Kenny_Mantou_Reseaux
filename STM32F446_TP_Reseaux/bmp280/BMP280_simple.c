@@ -59,7 +59,6 @@ int BMP280_init() {
 	uint8_t ctrl = (0b010 << 5) | (0b101 << 2) | (0b11);
 	/* 				osr_t x2       osr_p x16       normal mode   */
 
-	printf("Configure...\r\n");
 	ret = BMP280_Write_Reg(BMP280_CTRL_MEAS_REG, ctrl);
 	if (ret == 0) {
 		printf("Config Ok\r\n");
@@ -123,10 +122,10 @@ BMP280_S32_t BMP280_get_temperature() {
 			| ((BMP280_S32_t) (buf[2]) >> 4);
 
 	free(buf);
-
-	printf("Temperature: ");
-	printf("0X%05lX", adc_T);
-	printf("\r\n");
+//
+//	printf("Temperature: ");
+//	printf("0X%05lX", adc_T);
+//	printf("\r\n");
 
 	return adc_T;
 }
@@ -142,9 +141,9 @@ int BMP280_get_pressure() {
 
 	free(buf);
 
-	printf("Pressure:    0x");
-	printf("%05lX", adc_P);
-	printf("\r\n");
+//	printf("Pressure:    0x");
+//	printf("%05lX", adc_P);
+//	printf("\r\n");
 
 	return 0;
 }

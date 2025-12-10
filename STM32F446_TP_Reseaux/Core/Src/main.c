@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "can.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
@@ -54,6 +55,9 @@
 
 /* USER CODE BEGIN PV */
 float K = 1.0f;   // variable globale (à mettre en haut du fichier)
+
+CAN_TxHeaderTypeDef header;
+int A;  // coeffiecient de proportionnalite
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,41 +69,6 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//// Returns temperature in DegC, double precision. Output value of "51.23" equals 51.23 DegC.
-//// t_fine carries fine temperature as global value
-//BMP280_S32_t t_fine;
-//double bmp280_compensate_T_double(BMP280_S32_t adc_T)
-//{
-//	double var1, var2, T;
-//	var1 = (((double)adc_T)/16384.0 - ((double)dig_T1)/1024.0) * ((double)dig_T2);
-//	var2 = ((((double)adc_T)/131072.0 - ((double)dig_T1)/8192.0) *
-//			(((double)adc_T)/131072.0 - ((double)dig_T1)/8192.0)) * ((double)dig_T3);
-//	t_fine = (BMP280_S32_t)(var1 + var2);
-//	T = (var1 + var2) / 5120.0;
-//	return T;
-//}
-//
-//// Returns pressure in Pa as double. Output value of “96386.2” equals 96386.2 Pa = 963.862 hPa
-//double bmp280_compensate_P_double(BMP280_S32_t adc_P)
-//{
-//	double var1, var2, p;
-//	var1 = ((double)t_fine/2.0) - 64000.0;
-//	var2 = var1 * var1 * ((double)dig_P6) / 32768.0;
-//	var2 = var2 + var1 * ((double)dig_P5) * 2.0;
-//	var2 = (var2/4.0) + (((double)dig_P4) * 65536.0);
-//	var1 = (((double)dig_P3) * var1 * var1 / 524288.0 + ((double)dig_P2) * var1) / 524288.0;
-//	var1 = (1.0 + var1 / 32768.0)*((double)dig_P1);
-//	if (var1 == 0.0)
-//	{
-//		return 0; // avoid exception caused by division by zero
-//	}
-//	p = 1048576.0 - (double)adc_P;
-//	p = (p - (var2 / 4096.0)) * 6250.0 / var1;
-//	var1 = ((double)dig_P9) * p * p / 2147483648.0;
-//	var2 = p * ((double)dig_P8) / 32768.0;
-//	p = p + (var1 + var2 + ((double)dig_P7)) / 16.0;
-//	return p;
-//}
 
 
 int __io_putchar(int ch)
@@ -143,27 +112,27 @@ int GET_T(int argc, char ** argv,h_shell_t *h_shell){
 
 }
 
-
 int GET_P(int argc, char ** argv,h_shell_t *h_shell){
 	BMP280_S32_t pression;
-	pression =BMP280_get_pressure();
+	pression = BMP280_get_pressure();
 	printf("Pression compensée sur 10 caractères %ld \r\n",pression);
 	return 0;
 }
 
 int SET_K(int argc, char ** argv, h_shell_t *h_shell){
-    if(argc < 2){
-        printf("Usage : SET_K <valeur>\r\n");
-        return 1;
-    }
+	if(argc < 2){
+		printf("Usage : SET_K <valeur>\r\n");
+		return 1;
+	}
 
-    K = atof(argv[1]);  // conversion ASCII → float
-    printf("Coefficient K mis à jour : %.3f\r\n", K);
-    return 0;
+	K = atof(argv[1]);  // conversion ASCII → float
+	printf("Coefficient K mis à jour : \r\n", K);
+	return 0;
 }
+
 int GET_K(int argc, char ** argv, h_shell_t *h_shell){
-    printf("Coefficient K : %.3f\r\n", K);
-    return 0;
+	printf("Coefficient K : %.3f\r\n", K);
+	return 0;
 }
 
 int GET_A(int argc, char ** argv, h_shell_t *h_shell){
@@ -171,17 +140,45 @@ int GET_A(int argc, char ** argv, h_shell_t *h_shell){
 }
 
 
-void taskShell(void *unused){
-
-	printf("\r\n ===== SHELL LE VRAI =====");
+void taskShell(void *unused)
+{
 	shell_init(&h_shell);
-    shell_add('a', addition, "Ma super addition", &h_shell);
-    shell_add('t', GET_T, "Température compensée", &h_shell);
-    shell_add('p', GET_P, "Pression compensée", &h_shell);
-    shell_add('k', SET_K, "Fixe le coefficient K", &h_shell);
-    shell_add('K', GET_K, "Affiche K", &h_shell);
-    shell_add('A', GET_A, "Affiche l'angle", &h_shell);
+	shell_add('a', addition, "Ma super addition", &h_shell);
+	shell_add('t', GET_T, "Température compensée", &h_shell);
+	shell_add('p', GET_P, "Pression compensée", &h_shell);
+	shell_add('k', SET_K, "Fixe le coefficient K", &h_shell);
+	shell_add('K', GET_K, "Affiche K", &h_shell);
+	shell_add('A', GET_A, "Affiche l'angle", &h_shell);
 	shell_run(&h_shell);//shell_run contient une boucle infinie donc on ne retournera jamais de cette fonction
+}
+
+void taskCANMotor(void *unused)
+{
+	uint8_t TxData[2];
+	uint32_t TxMailbox;
+	/* Header configuration */
+	header.StdId = 0x61;
+	header.IDE = CAN_ID_STD;
+	header.RTR = CAN_RTR_DATA;
+	header.DLC = 3;
+	header.TransmitGlobalTime=DISABLE;
+
+	for (;;){
+		/* Data */
+		TxData[0] = 180;      // 30 DEGREES
+		TxData[1] = 0x01;      // Clockwise
+		//TxData[2] = 10;       // speed = 10 ms
+
+		HAL_CAN_AddTxMessage(&hcan1, &header,TxData, &TxMailbox);
+		vTaskDelay(1500);
+		/* Data */
+		TxData[0] = 180;      // 30 DEGREES
+		TxData[1] = 0x0;      // Counter Clockwise
+		//TxData[2] = 10;       // speed = 10 ms
+
+		HAL_CAN_AddTxMessage(&hcan1, &header,TxData, &TxMailbox);
+		vTaskDelay(1500);
+	}
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -191,7 +188,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		shell_uart_rx_callback(&h_shell);
 	}
 }
-
 
 /* USER CODE END 0 */
 
@@ -203,8 +199,10 @@ int main(void)
 {
 
 	/* USER CODE BEGIN 1 */
-	uint8_t RX_buffer[32];
-	uint8_t TX_buffer = BMP280_ID_REG;   // 0xD0
+	//	uint8_t RX_buffer[32];
+	//	uint8_t TX_buffer = BMP280_ID_REG;   // 0xD0
+
+
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/
@@ -228,30 +226,34 @@ int main(void)
 	MX_I2C1_Init();
 	MX_USART2_UART_Init();
 	MX_USART1_UART_Init();
+	MX_CAN1_Init();
 	/* USER CODE BEGIN 2 */
-	printf("=============Hello World========= \r\n");
+	printf("=========== STM32 5.0 CAN =========== \r\n");
+	HAL_CAN_Start (&hcan1);
+
+	printf("=========== STM32 Capteur =========== \r\n");
 	BMP280_init();
-	TX_buffer=0x57;
-
-	// envoyer l'adresse du registre ID
-	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		printf("Erreur transmit\r\n");
-
-	TX_buffer=BMP280_ID_REG;
-	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		printf("Erreur transmit\r\n");
-	// recevoir le registre
-	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-		printf("Erreur receive\r\n");
-	printf("Le registre ID est 0x%02X\r\n", RX_buffer[0]);
-	TX_buffer=BMP280_CALIB00;
-	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer,1, HAL_MAX_DELAY) != HAL_OK)
-		printf("Erreur transmit\r\n");
-	// recevoir le registre
-	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 26, HAL_MAX_DELAY) != HAL_OK){
-		printf("Erreur receive\r\n");
-	}
-	printf("Les registres calib 4 et calib 25 sont 0x%02X et 0x%02X\r\n", RX_buffer[4], RX_buffer[25] );
+	//	TX_buffer=0x57;
+	//
+	//	// envoyer l'adresse du registre ID
+	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	//		printf("Erreur transmit\r\n");
+	//
+	//	TX_buffer=BMP280_ID_REG;
+	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	//		printf("Erreur transmit\r\n");
+	//	// recevoir le registre
+	//	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
+	//		printf("Erreur receive\r\n");
+	//	printf("Le registre ID est 0x%02X\r\n", RX_buffer[0]);
+	//	TX_buffer=BMP280_CALIB00;
+	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer,1, HAL_MAX_DELAY) != HAL_OK)
+	//		printf("Erreur transmit\r\n");
+	//	// recevoir le registre
+	//	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 26, HAL_MAX_DELAY) != HAL_OK){
+	//		printf("Erreur receive\r\n");
+	//	}
+	//	printf("Les registres calib 4 et calib 25 sont 0x%02X et 0x%02X\r\n", RX_buffer[4], RX_buffer[25] );
 
 	if (xTaskCreate(
 			taskShell,             // fonction
@@ -264,6 +266,20 @@ int main(void)
 		printf("Error creating task shell\r\n");
 		Error_Handler();
 	}
+
+	if (xTaskCreate(
+			taskCANMotor,             // fonction
+			"CAN MOTOR",                // nom
+			128,                  // stack (en mots, pas en octets)
+			NULL,                 // paramètre
+			2, // priorité
+			NULL                  // handle (optionnel)
+	)!=pdPASS){
+		printf("Error creating task motor\r\n");
+		Error_Handler();
+	}
+
+
 	vTaskStartScheduler();
 	/* USER CODE END 2 */
 
@@ -299,7 +315,7 @@ void SystemClock_Config(void)
 	/** Configure the main internal regulator output voltage
 	 */
 	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
 	/** Initializes the RCC Oscillators according to the specified parameters
 	 * in the RCC_OscInitTypeDef structure.
@@ -309,12 +325,19 @@ void SystemClock_Config(void)
 	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-	RCC_OscInitStruct.PLL.PLLM = 16;
-	RCC_OscInitStruct.PLL.PLLN = 336;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+	RCC_OscInitStruct.PLL.PLLN = 180;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
 	RCC_OscInitStruct.PLL.PLLQ = 2;
 	RCC_OscInitStruct.PLL.PLLR = 2;
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	/** Activate the Over-Drive mode
+	 */
+	if (HAL_PWREx_EnableOverDrive() != HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -325,10 +348,10 @@ void SystemClock_Config(void)
 			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
 	{
 		Error_Handler();
 	}
