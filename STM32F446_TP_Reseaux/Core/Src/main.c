@@ -78,7 +78,6 @@ int __io_putchar(int ch)
 	return ch;
 }
 
-
 int addition(int argc, char ** argv,h_shell_t *h_shell){
 	int sum=0;
 	for(int i=1;i<argc;i++){
@@ -105,16 +104,16 @@ h_shell_t h_shell={
 };
 
 int GET_T(int argc, char ** argv,h_shell_t *h_shell){
-	BMP280_S32_t temperature;
-	temperature =BMP280_get_temperature();
+	float temperature;
+	BMP280_Read_Data(&temperature, NULL);
 	printf("Température compensée sur 10 caractères %ld \r\n",temperature);
 	return 0;
 
 }
 
 int GET_P(int argc, char ** argv,h_shell_t *h_shell){
-	BMP280_S32_t pression;
-	pression = BMP280_get_pressure();
+	float pression;
+	BMP280_Read_Data(NULL, &pression);
 	printf("Pression compensée sur 10 caractères %ld \r\n",pression);
 	return 0;
 }
