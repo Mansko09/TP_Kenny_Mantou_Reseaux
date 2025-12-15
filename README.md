@@ -59,6 +59,12 @@ Quelques tests :
 
 <img width="550" height="175" alt="image" src="https://github.com/user-attachments/assets/c76cd4d3-0d95-4180-8848-8705f3232ced" />
 
+### 4.3. - Nouvelles méthodes HTTP
+Méthode POST
+
+<img width="399" height="110" alt="image" src="https://github.com/user-attachments/assets/1ffb1396-f0d6-4113-af22-570ae01c3c1c" />
+
+
 ## 5. TP4 - BUS CAN
 
 
