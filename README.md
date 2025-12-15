@@ -65,11 +65,21 @@ Méthode POST
 
 <img width="399" height="110" alt="image" src="https://github.com/user-attachments/assets/1ffb1396-f0d6-4113-af22-570ae01c3c1c" />
 
+API CRUD 
+
+<img width="401" height="108" alt="image" src="https://github.com/user-attachments/assets/6374638d-539e-46f5-9603-de055d9902cd" />
+
+<img width="398" height="56" alt="image" src="https://github.com/user-attachments/assets/9a2f4ff5-2399-4262-8528-499430d3f4ba" />
+
+<img width="404" height="78" alt="image" src="https://github.com/user-attachments/assets/f83f0b49-5088-4dae-8d40-9a1717a76d31" />
+
+<img width="393" height="87" alt="image" src="https://github.com/user-attachments/assets/429dc9c6-c550-4439-a9c3-48ca4c3311e5" />
 
 ## 5. TP4 - BUS CAN
 
 
 ![WhatsAppVideo2025-12-10at4 31 55PM-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/6c3632fa-3b27-4963-a5d8-641c9c88ae2e)
+
 
 
 
