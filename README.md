@@ -51,6 +51,7 @@ Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la b
 
 <img width="458" height="161" alt="image" src="https://github.com/user-attachments/assets/69189998-269f-495f-85af-cae3160a6e55" />
 
+### 4.2. - Première page REST
 Le décorateur @app.route sert à associer une route à une fonction Python.
 Le fragment est un paramètre de route qui indique que l'URL doit contenir une valeur à cet endroit,que cette valeur est convertie en int et qu'elle sera transmise en argument à welcome.
 
