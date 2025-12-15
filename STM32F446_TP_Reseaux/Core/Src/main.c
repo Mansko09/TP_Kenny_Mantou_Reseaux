@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include "shell.h"
 #include "BMP280_simple.h"
+#include "mpu9250.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +55,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-float K = 1.0f;   // variable globale (à mettre en haut du fichier)
+float K = 120.0;   // variable globale (à mettre en haut du fichier)
 
 CAN_TxHeaderTypeDef header;
 int A;  // coeffiecient de proportionnalite
@@ -73,8 +74,8 @@ void MX_FREERTOS_Init(void);
 
 int __io_putchar(int ch)
 {
-	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
 	HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
 	return ch;
 }
 
@@ -86,19 +87,23 @@ int addition(int argc, char ** argv,h_shell_t *h_shell){
 	printf("\r\nsum=%d\r\n",sum);
 	return sum;
 }
+
 uint8_t drv_uart_receive(char * pData, uint16_t size){
-	HAL_UART_Receive(&huart1,(uint8_t*)pData,size,HAL_MAX_DELAY);
+	HAL_UART_Receive(&huart1, (uint8_t*)pData, size, HAL_MAX_DELAY);
 	return 0;
 }
+
+
 uint8_t drv_uart_transmit(char * pData, uint16_t size){
-	HAL_UART_Transmit(&huart1,(uint8_t*)pData,size,HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart1, (uint8_t*)pData, size, HAL_MAX_DELAY);
 	return 0;
 }
+
 h_shell_t h_shell={
 		.huart=&huart1,
 		.drv_shell={
-				.drv_shell_receive =drv_uart_receive,
-				.drv_shell_transmit= drv_uart_transmit
+				.drv_shell_receive = drv_uart_receive,
+				.drv_shell_transmit = drv_uart_transmit
 		}
 
 };
@@ -106,26 +111,25 @@ h_shell_t h_shell={
 int GET_T(int argc, char ** argv,h_shell_t *h_shell){
 	float temperature;
 	BMP280_Read_Data(&temperature, NULL);
-	printf("Température compensée sur 10 caractères %ld \r\n",temperature);
+	printf("Température compensée sur 10 caractères %f\r\n", temperature);
 	return 0;
-
 }
 
 int GET_P(int argc, char ** argv,h_shell_t *h_shell){
 	float pression;
 	BMP280_Read_Data(NULL, &pression);
-	printf("Pression compensée sur 10 caractères %ld \r\n",pression);
+	printf("Pression compensée sur 10 caractères %.3f \r\n",pression);
 	return 0;
 }
 
 int SET_K(int argc, char ** argv, h_shell_t *h_shell){
 	if(argc < 2){
-		printf("Usage : SET_K <valeur>\r\n");
+		printf("Usage : SET_K <value>\r\n");
 		return 1;
 	}
 
 	K = atof(argv[1]);  // conversion ASCII → float
-	printf("Coefficient K mis à jour : \r\n", K);
+	printf("Coefficient K mis à jour : %.3f\r\n", K);
 	return 0;
 }
 
@@ -138,6 +142,12 @@ int GET_A(int argc, char ** argv, h_shell_t *h_shell){
 	return 0;
 }
 
+int GET_Rotations(int argc, char ** argv, h_shell_t *h_shell){
+	mpu9250_data_t data;
+	MPU9250_ReadAll(&data);
+	MPU9250_PrintData(&data);
+	return 0;
+}
 
 void taskShell(void *unused)
 {
@@ -148,13 +158,16 @@ void taskShell(void *unused)
 	shell_add('k', SET_K, "Fixe le coefficient K", &h_shell);
 	shell_add('K', GET_K, "Affiche K", &h_shell);
 	shell_add('A', GET_A, "Affiche l'angle", &h_shell);
+	shell_add('r', GET_Rotations, "Affiche les données acceléromètre", &h_shell);
 	shell_run(&h_shell);//shell_run contient une boucle infinie donc on ne retournera jamais de cette fonction
 }
+
 
 void taskCANMotor(void *unused)
 {
 	uint8_t TxData[2];
 	uint32_t TxMailbox;
+	float savedTemp = 25.0;
 	/* Header configuration */
 	header.StdId = 0x61;
 	header.IDE = CAN_ID_STD;
@@ -163,20 +176,15 @@ void taskCANMotor(void *unused)
 	header.TransmitGlobalTime=DISABLE;
 
 	for (;;){
+		BMP280_Read_Data(&savedTemp, NULL);
 		/* Data */
-		TxData[0] = 180;      // 30 DEGREES
+		TxData[0] = (uint8_t) (25+K*savedTemp);
 		TxData[1] = 0x01;      // Clockwise
 		//TxData[2] = 10;       // speed = 10 ms
 
 		HAL_CAN_AddTxMessage(&hcan1, &header,TxData, &TxMailbox);
-		vTaskDelay(1500);
-		/* Data */
-		TxData[0] = 180;      // 30 DEGREES
-		TxData[1] = 0x0;      // Counter Clockwise
-		//TxData[2] = 10;       // speed = 10 ms
 
-		HAL_CAN_AddTxMessage(&hcan1, &header,TxData, &TxMailbox);
-		vTaskDelay(1500);
+		vTaskDelay(1000);
 	}
 }
 
@@ -191,68 +199,48 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
 
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
 	//	uint8_t RX_buffer[32];
 	//	uint8_t TX_buffer = BMP280_ID_REG;   // 0xD0
 
 
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_I2C1_Init();
-	MX_USART2_UART_Init();
-	MX_USART1_UART_Init();
-	MX_CAN1_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+  MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
+  MX_CAN1_Init();
+  /* USER CODE BEGIN 2 */
 	printf("=========== STM32 5.0 CAN =========== \r\n");
 	HAL_CAN_Start (&hcan1);
 
 	printf("=========== STM32 Capteur =========== \r\n");
-	BMP280_init();
-	//	TX_buffer=0x57;
-	//
-	//	// envoyer l'adresse du registre ID
-	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-	//		printf("Erreur transmit\r\n");
-	//
-	//	TX_buffer=BMP280_ID_REG;
-	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-	//		printf("Erreur transmit\r\n");
-	//	// recevoir le registre
-	//	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 1, HAL_MAX_DELAY) != HAL_OK)
-	//		printf("Erreur receive\r\n");
-	//	printf("Le registre ID est 0x%02X\r\n", RX_buffer[0]);
-	//	TX_buffer=BMP280_CALIB00;
-	//	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_DEVADRESS, &TX_buffer,1, HAL_MAX_DELAY) != HAL_OK)
-	//		printf("Erreur transmit\r\n");
-	//	// recevoir le registre
-	//	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_DEVADRESS, RX_buffer, 26, HAL_MAX_DELAY) != HAL_OK){
-	//		printf("Erreur receive\r\n");
-	//	}
-	//	printf("Les registres calib 4 et calib 25 sont 0x%02X et 0x%02X\r\n", RX_buffer[4], RX_buffer[25] );
+	BMP280_Init_complete();
+	MPU9250_Init();
 
 	if (xTaskCreate(
 			taskShell,             // fonction
@@ -280,80 +268,80 @@ int main(void)
 
 
 	vTaskStartScheduler();
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
-	/* Call init function for freertos objects (in cmsis_os2.c) */
-	MX_FREERTOS_Init();
+  /* Call init function for freertos objects (in cmsis_os2.c) */
+  MX_FREERTOS_Init();
 
-	/* Start scheduler */
-	osKernelStart();
+  /* Start scheduler */
+  osKernelStart();
 
-	/* We should never get here as control is now taken by the scheduler */
+  /* We should never get here as control is now taken by the scheduler */
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 
 	}
-	/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
-	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure the main internal regulator output voltage
-	 */
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-	RCC_OscInitStruct.PLL.PLLM = 8;
-	RCC_OscInitStruct.PLL.PLLN = 180;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 2;
-	RCC_OscInitStruct.PLL.PLLR = 2;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	{
-		Error_Handler();
-	}
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 180;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLR = 2;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Activate the Over-Drive mode
-	 */
-	if (HAL_PWREx_EnableOverDrive() != HAL_OK)
-	{
-		Error_Handler();
-	}
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Initializes the CPU, AHB and APB buses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-	{
-		Error_Handler();
-	}
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
@@ -361,54 +349,54 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
- * @brief  Period elapsed callback in non blocking mode
- * @note   This function is called  when TIM6 interrupt took place, inside
- * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
- * a global variable "uwTick" used as application time base.
- * @param  htim : TIM handle
- * @retval None
- */
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	/* USER CODE BEGIN Callback 0 */
+  /* USER CODE BEGIN Callback 0 */
 
-	/* USER CODE END Callback 0 */
-	if (htim->Instance == TIM6)
-	{
-		HAL_IncTick();
-	}
-	/* USER CODE BEGIN Callback 1 */
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6)
+  {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
 
-	/* USER CODE END Callback 1 */
+  /* USER CODE END Callback 1 */
 }
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
-	/* USER CODE BEGIN Error_Handler_Debug */
+  /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1)
 	{
 	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-	/* USER CODE BEGIN 6 */
+  /* USER CODE BEGIN 6 */
 	/* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-	/* USER CODE END 6 */
+  /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

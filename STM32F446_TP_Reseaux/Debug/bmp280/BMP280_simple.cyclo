@@ -1,6 +1,4 @@
-../bmp280/BMP280_simple.c:31:5:BMP280_check	4
-../bmp280/BMP280_simple.c:57:5:BMP280_init	2
-../bmp280/BMP280_simple.c:73:5:BMP280_Write_Reg	4
-../bmp280/BMP280_simple.c:96:10:BMP280_Read_Reg	3
-../bmp280/BMP280_simple.c:115:14:BMP280_get_temperature	1
-../bmp280/BMP280_simple.c:133:5:BMP280_get_pressure	1
+../bmp280/BMP280_simple.c:45:6:BMP280_Init_complete	3
+../bmp280/BMP280_simple.c:88:6:BMP280_Read_Data	3
+../bmp280/BMP280_simple.c:133:5:BMP280_Write_Reg	4
+../bmp280/BMP280_simple.c:156:10:BMP280_Read_Reg	3

@@ -14,11 +14,13 @@
 extern I2C_HandleTypeDef hi2c1;
 
 // Adresses des registres importants
+#define BMP280_ADDR (0x77<<1)
 #define BMP280_REG_CALIB  0x88
 #define BMP280_REG_ID     0xD0
 #define BMP280_REG_CTRL   0xF4
 #define BMP280_REG_CONFIG 0xF5
 #define BMP280_REG_DATA   0xF7
+
 
 // Structure pour stocker les données de calibration (fixe pour chaque capteur)
 typedef struct {
