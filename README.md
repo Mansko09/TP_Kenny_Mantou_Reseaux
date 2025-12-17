@@ -57,19 +57,20 @@ Méthode POST
 
 <img width="399" height="110" alt="image" src="https://github.com/user-attachments/assets/1ffb1396-f0d6-4113-af22-570ae01c3c1c" />
 
-API CRUD 
-POST :
+#### API CRUD 
+Méthode POST :
 
 <img width="401" height="108" alt="image" src="https://github.com/user-attachments/assets/6374638d-539e-46f5-9603-de055d9902cd" />
 
-PUT : 
+Méthode PUT : 
+
 <img width="398" height="56" alt="image" src="https://github.com/user-attachments/assets/9a2f4ff5-2399-4262-8528-499430d3f4ba" />
 
-PATCH :
+Méthode PATCH :
 
 <img width="404" height="78" alt="image" src="https://github.com/user-attachments/assets/f83f0b49-5088-4dae-8d40-9a1717a76d31" />
 
-DELETE : 
+Méthode DELETE : 
 
 <img width="393" height="87" alt="image" src="https://github.com/user-attachments/assets/429dc9c6-c550-4439-a9c3-48ca4c3311e5" />
 
@@ -81,10 +82,11 @@ Pour avoir 500 kbit/s on définit:
 ![WhatsAppVideo2025-12-10at4 31 55PM-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/6c3632fa-3b27-4963-a5d8-641c9c88ae2e)
 
 # 6. TP5 - Intégration I²C - Serial - REST - CAN
-POST température et pression : 
+Méthode POST température et pression : 
 
 <img width="416" height="273" alt="image" src="https://github.com/user-attachments/assets/4143c191-35af-4358-a85c-b5f1dc14e29f" />
 
+Méthodes POST pour récupérer une nouvelle température et GET pour afficher toutes les températures précédentes : 
 
 <img width="395" height="118" alt="image" src="https://github.com/user-attachments/assets/2d30ab1a-aadc-4287-9982-72c26d8e0dae" />
 
