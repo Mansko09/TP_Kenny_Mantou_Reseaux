@@ -26,23 +26,15 @@ HAL_I2C_Master_Transmit permet d'écire sur le bus, alors que HAL_I2C_Master_Rec
 L'adresse I²C est officiellement sur 7 bits. L'API HAL du STM32 demande des adresses I²C sur 8bits, le LSB étant réservé au bit de R/W. Il faudra donc penser à décaler les adresses d'1 bit sur la gauche et laisser le LSB à 0.
 
 #### Communication avec le BMP280
-Identification du BMP280 : 
+L'identification du BMP280 correspond à la lecture du registre ID.  
+
 <img width="169" height="43" alt="image" src="https://github.com/user-attachments/assets/64c3c8f6-5393-41d4-abe5-bd4a83d9d405" />
-
-Récupération de l'étalonnage, de la température et de la pression : 
-
-
-Calcul des températures et des pression compensées
-
 
 ## 3. TP2 - Interfaçage STM32 - Raspberry
 ### 3.1. Mise en route du Raspberry PI Zéro
 Nous avons téléchargé Raspberry Pi OS (32-bit) Lite, configuré le réseau du routeur utilisé en TP et utilisé ssh pour se connecter à notre raspberry.
 
 Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la box wi-fi). 
-
-
-
 
 ## 4. TP3 - Interface REST
 ### 4.1. Installation du serveur Python
@@ -52,7 +44,7 @@ Le Raspberry a obtenu l'adresse IP en envoyant une requête au serveur (ici la b
 <img width="458" height="161" alt="image" src="https://github.com/user-attachments/assets/69189998-269f-495f-85af-cae3160a6e55" />
 
 ### 4.2. - Première page REST
-Le décorateur @app.route sert à associer une route à une fonction Python.
+Le décorateur @app.route sert à associer une adresse URL à une fonction Python.
 Le fragment est un paramètre de route qui indique que l'URL doit contenir une valeur à cet endroit,que cette valeur est convertie en int et qu'elle sera transmise en argument à welcome.
 
 Quelques tests : 
@@ -66,23 +58,33 @@ Méthode POST
 <img width="399" height="110" alt="image" src="https://github.com/user-attachments/assets/1ffb1396-f0d6-4113-af22-570ae01c3c1c" />
 
 API CRUD 
+POST :
 
 <img width="401" height="108" alt="image" src="https://github.com/user-attachments/assets/6374638d-539e-46f5-9603-de055d9902cd" />
 
+PUT : 
 <img width="398" height="56" alt="image" src="https://github.com/user-attachments/assets/9a2f4ff5-2399-4262-8528-499430d3f4ba" />
 
+PATCH :
+
 <img width="404" height="78" alt="image" src="https://github.com/user-attachments/assets/f83f0b49-5088-4dae-8d40-9a1717a76d31" />
+
+DELETE : 
 
 <img width="393" height="87" alt="image" src="https://github.com/user-attachments/assets/429dc9c6-c550-4439-a9c3-48ca4c3311e5" />
 
 ## 5. TP4 - BUS CAN
+Pour avoir 500 kbit/s on définit:
+
 
 
 ![WhatsAppVideo2025-12-10at4 31 55PM-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/6c3632fa-3b27-4963-a5d8-641c9c88ae2e)
 
 # 6. TP5 - Intégration I²C - Serial - REST - CAN
+POST température et pression : 
 
 <img width="416" height="273" alt="image" src="https://github.com/user-attachments/assets/4143c191-35af-4358-a85c-b5f1dc14e29f" />
+
 
 <img width="395" height="118" alt="image" src="https://github.com/user-attachments/assets/2d30ab1a-aadc-4287-9982-72c26d8e0dae" />
 
