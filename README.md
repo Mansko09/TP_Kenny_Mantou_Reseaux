@@ -84,6 +84,8 @@ API CRUD
 
 <img width="416" height="273" alt="image" src="https://github.com/user-attachments/assets/4143c191-35af-4358-a85c-b5f1dc14e29f" />
 
+<img width="395" height="118" alt="image" src="https://github.com/user-attachments/assets/2d30ab1a-aadc-4287-9982-72c26d8e0dae" />
+
 
 
 
