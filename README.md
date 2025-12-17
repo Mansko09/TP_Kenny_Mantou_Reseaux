@@ -80,6 +80,9 @@ API CRUD
 
 ![WhatsAppVideo2025-12-10at4 31 55PM-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/6c3632fa-3b27-4963-a5d8-641c9c88ae2e)
 
+# 6. TP5 - Intégration I²C - Serial - REST - CAN
+
+<img width="416" height="273" alt="image" src="https://github.com/user-attachments/assets/4143c191-35af-4358-a85c-b5f1dc14e29f" />
 
 
 
