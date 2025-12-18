@@ -76,6 +76,7 @@ Méthode DELETE :
 
 ## 5. TP4 - BUS CAN
 Pour avoir 500 kbit/s on met les paramètres ci-dessous :
+
 <img width="574" height="209" alt="image" src="https://github.com/user-attachments/assets/caa671e0-1823-4cc0-9922-58b1e32f3348" />
 
 on a utilisé le site indiqué dans l'énoncé mais il fallait encore prendre en compte que le bus APB1 interne du STM32F446 ne montait qu'a 45 MHz alors que la fréquence d'horloge d'entrée était de 180 MHz.
